@@ -6,6 +6,7 @@ import joblib
 import numpy as np
 import pandas as pd
 from sklearn.model_selection import KFold, StratifiedKFold
+from iterstrat.ml_stratifiers import MultilabelStratifiedKFold
 from sklearn.preprocessing import LabelEncoder, OrdinalEncoder
 from sklearn.utils.multiclass import type_of_target
 
@@ -77,10 +78,9 @@ class AutoXGB:
             kf = KFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
             for fold, (_, valid_indicies) in enumerate(kf.split(X=train_df, y=y)):
                 train_df.loc[valid_indicies, "kfold"] = fold
-        # TODO: use iterstrat
         elif problem_type == ProblemType.multi_label_classification:
             y = train_df[self.targets].values
-            kf = KFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
+            kf = MultilabelStratifiedKFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
             for fold, (_, valid_indicies) in enumerate(kf.split(X=train_df, y=y)):
                 train_df.loc[valid_indicies, "kfold"] = fold
         else:
@@ -146,8 +146,13 @@ class AutoXGB:
         return df
 
     def _process_data(self):
-        logger.info("Reading training data")
-        train_df = pd.read_csv(self.train_filename)
+        logger.info(f"Reading training data")
+
+        if type(self.train_filename) == str: 
+            train_df = pd.read_csv(self.train_filename)
+        else: 
+            train_df = self.train_filename
+        
         train_df = reduce_memory_usage(train_df)
         problem_type = self._determine_problem_type(train_df)
 

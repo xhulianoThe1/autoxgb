@@ -1,4 +1,5 @@
-from typing import List, Optional
+import pandas as pd 
+from typing import List, Optional, Union, TypeVar
 
 from pydantic import BaseModel
 
@@ -6,7 +7,7 @@ from .enums import ProblemType
 
 
 class ModelConfig(BaseModel):
-    train_filename: str
+    train_filename: Union[TypeVar("pandas.core.frame.DataFrame"), str]
     test_filename: Optional[str] = None
     idx: str
     targets: List[str]
